@@ -23,6 +23,7 @@ app = FastAPI(title="VNR-ACE Backend")
 # ---------------------------
 origins = [
     "http://localhost:3000",
+    "https://vnr-ace-frontend-gx34.vercel.app",
     "http://127.0.0.1:3000",
 ]
 
