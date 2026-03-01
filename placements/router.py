@@ -139,3 +139,54 @@ async def shortlist_students(
         filtered.append(s)
         
     return {"matches": filtered}
+
+@router.post("/prep/company-questions")
+async def get_company_questions(body: dict):
+    """
+    Generate top 20 company-specific interview questions.
+    
+    Request body:
+    {
+        "company_name": "Google",
+        "job_role": "Software Engineer"  # optional, defaults to "Software Engineer"
+    }
+    
+    Returns categorized interview questions with difficulty levels and relevance.
+    """
+    company_name = body.get("company_name")
+    if not company_name:
+        raise HTTPException(status_code=400, detail="company_name is required")
+    
+    job_role = body.get("job_role", "Software Engineer")
+    
+    # Prepare state for prep_graph
+    initial_state = {
+        "user_id": 999,
+        "role": "student",
+        "message": f"{company_name} {job_role}",
+        "intent": "prep",
+        "authorized": False,
+        "response": None,
+        "validation_status": None,
+        "company_name": company_name,
+        "job_role": job_role
+    }
+    
+    try:
+        # Run prep graph
+        result = await prep_graph.ainvoke(initial_state)
+        
+        return {
+            "company": result.get("company_name"),
+            "role": result.get("job_role"),
+            "questions": result.get("questions", []),
+            "formatted_response": result.get("response"),
+            "context_loaded": bool(result.get("company_context", {}).get("company_info")),
+            "web_search_results": len(result.get("search_results", []))
+        }
+    except Exception as e:
+        print(f"Error generating company questions: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error generating questions: {str(e)}"
+        )

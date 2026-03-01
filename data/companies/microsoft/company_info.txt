@@ -1,0 +1,21 @@
+Microsoft is a multinational technology corporation producing computer software, consumer electronics, personal computers, and related services. Founded in 1975, Microsoft is best known for Windows OS and Office suite.
+
+Key Products:
+- Windows Operating System
+- Microsoft Office (Word, Excel, PowerPoint, etc.)
+- Azure Cloud Platform
+- Visual Studio
+- GitHub
+- LinkedIn
+- Xbox
+- Surface devices
+
+Company Size: 220,000+ employees globally
+Headquarters: Redmond, Washington
+
+Interview Focus:
+- Problem-solving and analytical skills
+- System design and architecture
+- Collaboration and teamwork
+- Growth mindset
+- Technical depth in chosen domain

@@ -1,0 +1,217 @@
+﻿================================================================================
+TESTING CLASSWORK GRAPH WITH LLM-BASED INTENT CLASSIFICATION
+================================================================================
+
+
+================================================================================
+TEST 1: Show me CSE students with attendance below 75%
+================================================================================
+
+[1] Academic NLQ Entry: Received query 'Show me CSE students with attendance below 75%'
+[2] Query Normalizer: Normalizing 'Show me CSE students with attendance below 75%'
+    -> Normalized: 'show me cse students with attendanceendance below 75%'
+[3] Schema & Intent Mapper: Mapping 'show me cse students with attendanceendance below 75%'
+    -> LLM Response: {
+  "metrics": ["attendance_pct"],
+  "filters": {
+    "branch": "CSE"
+  },
+  "comparisons": {
+    "attendance_pct": {"op": "lt", "value": 75}
+  },
+  "sort_by": "cumulative_gpa",
+  "sort_order": "desc"...
+    -> Extracted Intent: {'metrics': ['attendance_pct'], 'filters': {'branch': 'CSE'}, 'comparisons': {'attendance_pct': {'op': 'lt', 'value': 75}}, 'sort_by': 'cumulative_gpa', 'sort_order': 'desc'}
+[4] Query Planner: Building plan for {'metrics': ['attendance_pct'], 'filters': {'branch': 'CSE'}, 'comparisons': {'attendance_pct': {'op': 'lt', 'value': 75}}, 'sort_by': 'cumulative_gpa', 'sort_order': 'desc'}
+    -> Plan: {'datasets': ['student_metadata'], 'operations': []}
+[5] Data Fetcher: Fetching datasets ['student_metadata']
+    -> Loaded 30 records from Excel
+[6] Aggregation Engine: Processing 30 records
+    -> 2 records remaining after filtering
+[7] Insight Generator: Analyzing data
+[8] Response Formatter: Formatting output
+
+[SUCCESS]
+
+Final Response:
+### Academic Insights
+
+- 2 students in this group show critical performance drops (Risk Score >= 2).
+- Students requiring immediate attention: Sai Krishna, Arjun Reddy.
+
+### Student Details
+| Name | Roll No | Branch | Section | Year | Attendance | CGPA | Backlogs | Risk Factors |
+|---|---|---|---|---|---|---|---|---|
+| Sai Krishna | 21R01A0506 | CSE | B | 2 | 72% | 6.8 | 1 | Low Attendance, 1 Backlog(s) |
+| Arjun Reddy | 21R01A0505 | CSE | B | 2 | 67% | 6.2 | 2 | Low Attendance, 2 Backlog(s) |
+
+
+
+================================================================================
+TEST 2: What is the average CGPA of ECE students?
+================================================================================
+
+[1] Academic NLQ Entry: Received query 'What is the average CGPA of ECE students?'
+[2] Query Normalizer: Normalizing 'What is the average CGPA of ECE students?'
+    -> Normalized: 'what is the average ccgpa of ece students?'
+[3] Schema & Intent Mapper: Mapping 'what is the average ccgpa of ece students?'
+    -> LLM Response: {
+  "metrics": ["cumulative_gpa"],
+  "filters": {
+    "branch": "ECE"
+  },
+  "comparisons": {
+    "cumulative_gpa": {"op": "gt", "value": 0}
+  }
+}...
+    -> Extracted Intent: {'metrics': ['cumulative_gpa'], 'filters': {'branch': 'ECE'}, 'comparisons': {'cumulative_gpa': {'op': 'gt', 'value': 0}}, 'sort_by': None, 'sort_order': 'desc'}
+[4] Query Planner: Building plan for {'metrics': ['cumulative_gpa'], 'filters': {'branch': 'ECE'}, 'comparisons': {'cumulative_gpa': {'op': 'gt', 'value': 0}}, 'sort_by': None, 'sort_order': 'desc'}
+    -> Plan: {'datasets': ['student_metadata', 'marks_table'], 'operations': []}
+[5] Data Fetcher: Fetching datasets ['student_metadata', 'marks_table']
+    -> Loaded 30 records from Excel
+[6] Aggregation Engine: Processing 30 records
+    -> 8 records remaining after filtering
+[7] Insight Generator: Analyzing data
+[8] Response Formatter: Formatting output
+
+[SUCCESS]
+
+Final Response:
+### Academic Insights
+
+- 2 students in this group show critical performance drops (Risk Score >= 2).
+- Students requiring immediate attention: Ishaan Verma, Dhruv Menon.
+
+### Student Details
+| Name | Roll No | Branch | Section | Year | Attendance | CGPA | Backlogs | Risk Factors |
+|---|---|---|---|---|---|---|---|---|
+| Ishaan Verma | 21R01A0510 | ECE | A | 3 | 65% | 5.8 | 3 | Low Attendance, Low CGPA, 3 Backlog(s) |
+| Dhruv Menon | 21R01A0515 | ECE | A | 3 | 58% | 5.2 | 2 | Low Attendance, Low CGPA, 2 Backlog(s) |
+| Krishna Rao | 21R01A0509 | ECE | A | 3 | 78% | 7.5 | 1 | 1 Backlog(s) |
+| Advait Desai | 21R01A0513 | ECE | C | 3 | 76% | 7.2 | 1 | 1 Backlog(s) |
+| Myra Rao | 21R01A0529 | ECE | C | 4 | 79% | 7.6 | 1 | 1 Backlog(s) |
+| Shaurya Nair | 21R01A0511 | ECE | B | 3 | 94% | 9.1 | 0 | None |
+| Atharv Joshi | 21R01A0512 | ECE | B | 3 | 89% | 8.3 | 0 | None |
+| Pranav Iyer | 21R01A0514 | ECE | C | 3 | 82% | 7.8 | 0 | None |
+
+
+
+================================================================================
+TEST 3: Students with backlogs in year 2
+================================================================================
+
+[1] Academic NLQ Entry: Received query 'Students with backlogs in year 2'
+[2] Query Normalizer: Normalizing 'Students with backlogs in year 2'
+    -> Normalized: 'students with backlogs in year 2'
+[3] Schema & Intent Mapper: Mapping 'students with backlogs in year 2'
+    -> LLM Response: {
+  "metrics": ["backlogs"],
+  "filters": {
+    "year": 2
+  },
+  "comparisons": {
+    "backlogs": {"op": "gt", "value": 0}
+  }
+}...
+    -> Extracted Intent: {'metrics': ['backlogs'], 'filters': {'year': 2}, 'comparisons': {'backlogs': {'op': 'gt', 'value': 0}}, 'sort_by': None, 'sort_order': 'desc'}
+[4] Query Planner: Building plan for {'metrics': ['backlogs'], 'filters': {'year': 2}, 'comparisons': {'backlogs': {'op': 'gt', 'value': 0}}, 'sort_by': None, 'sort_order': 'desc'}
+    -> Plan: {'datasets': ['student_metadata'], 'operations': []}
+[5] Data Fetcher: Fetching datasets ['student_metadata']
+    -> Loaded 30 records from Excel
+[6] Aggregation Engine: Processing 30 records
+    -> 2 records remaining after filtering
+[7] Insight Generator: Analyzing data
+[8] Response Formatter: Formatting output
+
+[SUCCESS]
+
+Final Response:
+### Academic Insights
+
+- 2 students in this group show critical performance drops (Risk Score >= 2).
+- Students requiring immediate attention: Arjun Reddy, Sai Krishna.
+
+### Student Details
+| Name | Roll No | Branch | Section | Year | Attendance | CGPA | Backlogs | Risk Factors |
+|---|---|---|---|---|---|---|---|---|
+| Arjun Reddy | 21R01A0505 | CSE | B | 2 | 67% | 6.2 | 2 | Low Attendance, 2 Backlog(s) |
+| Sai Krishna | 21R01A0506 | CSE | B | 2 | 72% | 6.8 | 1 | Low Attendance, 1 Backlog(s) |
+
+
+
+================================================================================
+TEST 4: Top performers in CSE section A
+================================================================================
+
+[1] Academic NLQ Entry: Received query 'Top performers in CSE section A'
+[2] Query Normalizer: Normalizing 'Top performers in CSE section A'
+    -> Normalized: 'top performers in cse section a'
+[3] Schema & Intent Mapper: Mapping 'top performers in cse section a'
+    -> LLM Response: {
+  "metrics": ["attendance_pct"],
+  "filters": {
+    "branch": "CSE",
+    "section": "A"
+  },
+  "comparisons": {
+    "attendance_pct": {"op": "lt", "value": 75}
+  },
+  "sort_by": "cumulative_gpa",
+  ...
+    -> Extracted Intent: {'metrics': ['attendance_pct'], 'filters': {'branch': 'CSE', 'section': 'A'}, 'comparisons': {'attendance_pct': {'op': 'lt', 'value': 75}}, 'sort_by': 'cumulative_gpa', 'sort_order': 'desc'}
+[4] Query Planner: Building plan for {'metrics': ['attendance_pct'], 'filters': {'branch': 'CSE', 'section': 'A'}, 'comparisons': {'attendance_pct': {'op': 'lt', 'value': 75}}, 'sort_by': 'cumulative_gpa', 'sort_order': 'desc'}
+    -> Plan: {'datasets': ['student_metadata'], 'operations': []}
+[5] Data Fetcher: Fetching datasets ['student_metadata']
+    -> Loaded 30 records from Excel
+[6] Aggregation Engine: Processing 30 records
+    -> 0 records remaining after filtering
+[7] Insight Generator: Analyzing data
+[8] Response Formatter: Formatting output
+
+[SUCCESS]
+
+Final Response:
+### Academic Insights
+
+- No data found matching the specific criteria.
+
+*No students found matching the criteria.*
+
+
+
+================================================================================
+TEST 5: CSE students 2nd year with low attendance and poor grades
+================================================================================
+
+[1] Academic NLQ Entry: Received query 'CSE students 2nd year with low attendance and poor grades'
+[2] Query Normalizer: Normalizing 'CSE students 2nd year with low attendance and poor grades'
+    -> Normalized: 'cse students year 2 with low attendanceendance and poor grades'
+[3] Schema & Intent Mapper: Mapping 'cse students year 2 with low attendanceendance and poor grades'
+    -> LLM Response: {
+  "metrics": ["attendance_pct"],
+  "filters": {
+    "branch": "CSE",
+    "year": 2
+  },
+  "comparisons": {
+    "attendance_pct": {"op": "lt", "value": 75},
+    "cumulative_gpa": {"op": "lt", "value"...
+    -> Extracted Intent: {'metrics': ['attendance_pct'], 'filters': {'branch': 'CSE', 'year': 2}, 'comparisons': {'attendance_pct': {'op': 'lt', 'value': 75}, 'cumulative_gpa': {'op': 'lt', 'value': 6.0}}, 'sort_by': None, 'sort_order': 'desc'}
+[4] Query Planner: Building plan for {'metrics': ['attendance_pct'], 'filters': {'branch': 'CSE', 'year': 2}, 'comparisons': {'attendance_pct': {'op': 'lt', 'value': 75}, 'cumulative_gpa': {'op': 'lt', 'value': 6.0}}, 'sort_by': None, 'sort_order': 'desc'}
+    -> Plan: {'datasets': ['student_metadata'], 'operations': []}
+[5] Data Fetcher: Fetching datasets ['student_metadata']
+    -> Loaded 30 records from Excel
+[6] Aggregation Engine: Processing 30 records
+    -> 0 records remaining after filtering
+[7] Insight Generator: Analyzing data
+[8] Response Formatter: Formatting output
+
+[SUCCESS]
+
+Final Response:
+### Academic Insights
+
+- No data found matching the specific criteria.
+
+*No students found matching the criteria.*
+

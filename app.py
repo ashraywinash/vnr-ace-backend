@@ -30,8 +30,13 @@ origins = [
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup logic
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        print("✓ Database connected successfully")
+    except Exception as e:
+        print(f"⚠ Warning: Database connection failed: {e}")
+        print("⚠ App will start without database (classwork module uses Excel files)")
 
     yield
 

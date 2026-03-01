@@ -1,0 +1,813 @@
+{
+	"info": {
+		"_postman_id": "vnr-ace-backend-2026",
+		"name": "VNR-ACE Backend API",
+		"description": "Complete API collection for VNR-ACE Backend with all endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"access_token\", jsonData.access_token);",
+									"    pm.environment.set(\"user_email\", jsonData.user.email);",
+									"    pm.environment.set(\"user_role\", jsonData.user.role);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin@vnr.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "admin123",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login endpoint - automatically saves access token to environment"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "General",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								""
+							]
+						},
+						"description": "Check if backend is running"
+					},
+					"response": []
+				},
+				{
+					"name": "Admin Test",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/test",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"test"
+							]
+						},
+						"description": "Admin-only test endpoint (requires admin role)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admissions",
+			"item": [
+				{
+					"name": "Admissions Chat",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"What are the admission requirements for CSE?\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/admissions/chat",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admissions",
+								"chat"
+							]
+						},
+						"description": "Chat with admissions AI assistant"
+					},
+					"response": []
+				},
+				{
+					"name": "Admissions Admin Access",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admissions/admin",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admissions",
+								"admin"
+							]
+						},
+						"description": "Admin access endpoint (requires admin role)"
+					},
+					"response": []
+				},
+				{
+					"name": "Admissions Faculty Access",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admissions/faculty",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admissions",
+								"faculty"
+							]
+						},
+						"description": "Faculty access endpoint (requires faculty role)"
+					},
+					"response": []
+				},
+				{
+					"name": "Admissions Student Access",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admissions/student",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admissions",
+								"student"
+							]
+						},
+						"description": "Student access endpoint (requires student role)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Classwork",
+			"item": [
+				{
+					"name": "Classwork Chat - Attendance Query",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"Show me students with attendance below 75%\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/classwork/chat",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"classwork",
+								"chat"
+							]
+						},
+						"description": "Query student attendance data"
+					},
+					"response": []
+				},
+				{
+					"name": "Classwork Chat - CGPA Query",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"What is the average CGPA of CSE students?\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/classwork/chat",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"classwork",
+								"chat"
+							]
+						},
+						"description": "Query student CGPA data"
+					},
+					"response": []
+				},
+				{
+					"name": "Classwork Faculty Access",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/classwork/faculty",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"classwork",
+								"faculty"
+							]
+						},
+						"description": "Faculty access endpoint (requires faculty role)"
+					},
+					"response": []
+				},
+				{
+					"name": "Classwork Student Access",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/classwork/student",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"classwork",
+								"student"
+							]
+						},
+						"description": "Student access endpoint (requires student role)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Placements",
+			"item": [
+				{
+					"name": "Chat - Dashboard",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"Show me placement statistics\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/placements/chat/dashboard",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"placements",
+								"chat",
+								"dashboard"
+							]
+						},
+						"description": "Chat with dashboard graph"
+					},
+					"response": []
+				},
+				{
+					"name": "Chat - Resume",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"Analyze my resume\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/placements/chat/resume",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"placements",
+								"chat",
+								"resume"
+							]
+						},
+						"description": "Chat with resume graph"
+					},
+					"response": []
+				},
+				{
+					"name": "Chat - Prep",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"Help me prepare for interviews\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/placements/chat/prep",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"placements",
+								"chat",
+								"prep"
+							]
+						},
+						"description": "Chat with prep graph"
+					},
+					"response": []
+				},
+				{
+					"name": "Chat - Shortlisting",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"trigger\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/placements/chat/shortlisting",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"placements",
+								"chat",
+								"shortlisting"
+							]
+						},
+						"description": "Chat with shortlisting graph"
+					},
+					"response": []
+				},
+				{
+					"name": "Chat - Tracking",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"Track my applications\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/placements/chat/tracking",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"placements",
+								"chat",
+								"tracking"
+							]
+						},
+						"description": "Chat with tracking graph"
+					},
+					"response": []
+				},
+				{
+					"name": "Chat - Notification",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"Show notifications\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/placements/chat/notification",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"placements",
+								"chat",
+								"notification"
+							]
+						},
+						"description": "Chat with notification graph"
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Resume",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/placements/upload-resume",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"placements",
+								"upload-resume"
+							]
+						},
+						"description": "Upload and analyze resume (select a PDF/DOCX file)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dashboard Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/placements/dashboard-stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"placements",
+								"dashboard-stats"
+							]
+						},
+						"description": "Get live placement statistics"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Companies List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/placements/companies",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"placements",
+								"companies"
+							]
+						},
+						"description": "Get list of recruiting companies"
+					},
+					"response": []
+				},
+				{
+					"name": "Shortlist Students",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "jd",
+									"value": "Looking for software engineer with Python and ML skills",
+									"type": "text"
+								},
+								{
+									"key": "min_gpa",
+									"value": "8.0",
+									"type": "text"
+								},
+								{
+									"key": "branch",
+									"value": "CSE",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/placements/shortlist",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"placements",
+								"shortlist"
+							]
+						},
+						"description": "Shortlist students based on job description and criteria"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Company Interview Questions - Google",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"company_name\": \"Google\",\n  \"job_role\": \"Software Engineer\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/placements/prep/company-questions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"placements",
+								"prep",
+								"company-questions"
+							]
+						},
+						"description": "Generate top 20 Google interview questions"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Company Interview Questions - Microsoft",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"company_name\": \"Microsoft\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/placements/prep/company-questions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"placements",
+								"prep",
+								"company-questions"
+							]
+						},
+						"description": "Generate top 20 Microsoft interview questions (default role: Software Engineer)"
+					},
+					"response": []
+				},
+				{
+					"name": "Placements Admin Access",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/placements/admin",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"placements",
+								"admin"
+							]
+						},
+						"description": "Admin access endpoint (requires admin role)"
+					},
+					"response": []
+				},
+				{
+					"name": "Placements Student Access",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/placements/student",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"placements",
+								"student"
+							]
+						},
+						"description": "Student access endpoint (requires student role)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test RBAC",
+			"item": [
+				{
+					"name": "Admin Only Test",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/test/admin-only",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"test",
+								"admin-only"
+							]
+						},
+						"description": "RBAC test endpoint (requires admin role with role_id = 1)"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_email",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_role",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

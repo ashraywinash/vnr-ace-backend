@@ -1,0 +1,15 @@
+Primary Technologies:
+- Languages: Java, C++, Python, JavaScript, TypeScript
+- Cloud: AWS (EC2, S3, Lambda, DynamoDB, RDS, etc.)
+- Databases: DynamoDB, Aurora, RDS, Redshift
+- Infrastructure: Docker, Kubernetes, ECS
+- Frontend: React, Angular
+- Mobile: Android, iOS (Swift, Kotlin)
+
+System Design Focus:
+- Microservices architecture
+- Event-driven architecture
+- High scalability and availability
+- Distributed systems
+- Cost optimization
+- Security and compliance

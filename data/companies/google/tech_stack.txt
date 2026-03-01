@@ -1,0 +1,14 @@
+Primary Technologies:
+- Languages: C++, Java, Python, Go, JavaScript
+- Infrastructure: Kubernetes, Docker, Borg
+- Databases: Bigtable, Spanner, BigQuery
+- ML/AI: TensorFlow, JAX
+- Frontend: Angular, Polymer
+- Mobile: Android SDK, Flutter
+
+System Design Focus:
+- Distributed systems at massive scale
+- Microservices architecture
+- High availability and fault tolerance
+- Data consistency models (CAP theorem)
+- Load balancing and caching strategies

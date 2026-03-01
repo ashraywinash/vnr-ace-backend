@@ -1,0 +1,19 @@
+Google is a multinational technology company specializing in Internet-related services and products. Founded in 1998, Google is known for its search engine, cloud computing, online advertising technologies, and various software and hardware products.
+
+Key Products:
+- Google Search
+- Android OS
+- Chrome Browser
+- Google Cloud Platform (GCP)
+- YouTube
+- Gmail
+- Google Maps
+
+Company Size: 150,000+ employees globally
+Headquarters: Mountain View, California
+
+Interview Focus:
+- Strong emphasis on data structures and algorithms
+- System design for large-scale distributed systems
+- "Googleyness" - cultural fit and collaboration
+- Problem-solving and analytical thinking

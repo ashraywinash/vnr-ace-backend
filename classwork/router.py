@@ -1,20 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
-from core.deps import role_required
+from core.deps import role_required, get_current_user
 # from core.auth import get_current_user # Commented out DB dependency
 from ace_graphs.classwork_graph import classwork_graph
+from ace_graphs.classwork_student_graph import classwork_student_graph
 from typing import Optional
 
 router = APIRouter(prefix="/classwork", tags=["Classwork"])
-
-# MOCK User to bypass DB requirements for Excel mode
-class MockUser:
-    def __init__(self):
-        self.id = 1
-        self.role_id = 4 # Admin-like role or Student
-        self.email = "mock_admin@vnr.edu.in"
-
-async def get_mock_user():
-    return MockUser()
 
 @router.get("/faculty")
 async def faculty_access(user = Depends(role_required("faculty"))):
@@ -28,22 +19,87 @@ async def student_access(user = Depends(role_required("student"))):
 async def classwork_chat(
     body: dict,
     # current_user=Depends(get_current_user) # OLD DB-dependent auth
-    current_user=Depends(get_mock_user)      # NEW Mock auth
+    current_user=Depends(role_required("admin"))      # Requiring Admin for the Excel graph for now
 ):
+    """
+    Process natural language queries about student data.
+    Supports queries about attendance, CGPA, backlogs, branches, sections, and years.
+    """
     message = body.get("message")
     if not message:
         raise HTTPException(status_code=400, detail="Message required")
+    
+    if not message.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
 
-    # Prepare graph state
-    initial_state = {
-        "user_query": message,
-        "role": current_user.role_id, 
-        "context": {"user_id": current_user.id}
-    }
+    try:
+        # Prepare graph state
+        initial_state = {
+            "user_query": message,
+            "role": current_user.role_id, 
+            "context": {"user_id": current_user.id}
+        }
 
-    # Run graph
-    result = await classwork_graph.ainvoke(initial_state)
+        # Run graph
+        result = await classwork_graph.ainvoke(initial_state)
 
-    return {
-        "reply": result.get("final_response"),
-    }
+        # Extract response and metadata
+        final_response = result.get("final_response", "No response generated")
+        dataset = result.get("unified_dataset", [])
+        
+        return {
+            "reply": final_response,
+            "metadata": {
+                "record_count": len(dataset),
+                "query": message
+            }
+        }
+    except Exception as e:
+        print(f"Error processing classwork query: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error processing query: {str(e)}"
+        )
+
+@router.post("/student/chat")
+async def student_chat(
+    body: dict,
+    current_user=Depends(role_required("student"))
+):
+    """
+    Process student queries about faculty availability and room numbers.
+    """
+    message = body.get("message")
+    if not message:
+        raise HTTPException(status_code=400, detail="Message required")
+    
+    if not message.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    try:
+        # Prepare graph state
+        initial_state = {
+            "user_query": message,
+            "role": current_user.role_id, 
+            "context": {"user_id": current_user.id}
+        }
+
+        # Run graph
+        result = await classwork_student_graph.ainvoke(initial_state)
+
+        # Extract response
+        final_response = result.get("final_response", "No response generated")
+        
+        return {
+            "reply": final_response,
+            "metadata": {
+                "query": message
+            }
+        }
+    except Exception as e:
+        print(f"Error processing student query: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error processing query: {str(e)}"
+        )
+

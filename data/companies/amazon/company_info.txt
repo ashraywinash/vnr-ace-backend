@@ -1,0 +1,34 @@
+Amazon is a multinational technology company focusing on e-commerce, cloud computing, digital streaming, and artificial intelligence. Founded in 1994, Amazon is one of the Big Five American technology companies.
+
+Key Products:
+- Amazon.com (E-commerce)
+- Amazon Web Services (AWS)
+- Prime Video
+- Alexa
+- Kindle
+- Amazon Fresh
+
+Company Size: 1.5+ million employees globally
+Headquarters: Seattle, Washington
+
+Leadership Principles (Core to Amazon Culture):
+1. Customer Obsession
+2. Ownership
+3. Invent and Simplify
+4. Are Right, A Lot
+5. Learn and Be Curious
+6. Hire and Develop the Best
+7. Insist on the Highest Standards
+8. Think Big
+9. Bias for Action
+10. Frugality
+11. Earn Trust
+12. Dive Deep
+13. Have Backbone; Disagree and Commit
+14. Deliver Results
+
+Interview Focus:
+- Leadership Principles-based behavioral questions
+- System design for scalability
+- Data structures and algorithms
+- Ownership and accountability

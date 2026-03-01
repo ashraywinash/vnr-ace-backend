@@ -1,0 +1,15 @@
+Primary Technologies:
+- Languages: C#, TypeScript, Python, C++, Java
+- Cloud: Azure (VMs, Functions, Cosmos DB, SQL Database, etc.)
+- Frameworks: .NET, ASP.NET Core, Entity Framework
+- Frontend: React, TypeScript, Blazor
+- Databases: SQL Server, Cosmos DB, Azure SQL
+- DevOps: Azure DevOps, GitHub Actions
+- AI/ML: Azure AI, Cognitive Services
+
+System Design Focus:
+- Cloud-native applications
+- Microservices with Azure
+- Enterprise-scale solutions
+- Security and compliance
+- Hybrid cloud architectures
