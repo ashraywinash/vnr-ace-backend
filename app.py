@@ -7,6 +7,7 @@ from routes.admissions import router as admissions_router
 from classwork.router import router as classwork_router
 from placements.router import router as placements_router
 from routes.test_rbac import router as test_rbac_router
+from routes.api_router import router as build_api_router
 
 from core.deps import role_required
 from fastapi import FastAPI
@@ -15,6 +16,11 @@ from core.db import engine, Base
 # IMPORTANT: import models so metadata registers
 from models.user import User
 from models.role import Role
+from models.student import Student
+from models.company import Company
+from models.placement import Placement
+from models.offer import Offer
+from models.minor_degree import MinorDegree
 
 app = FastAPI(title="VNR-ACE Backend")
 
@@ -77,3 +83,4 @@ app.include_router(admissions_router)
 app.include_router(classwork_router)
 app.include_router(placements_router)
 app.include_router(test_rbac_router)
+app.include_router(build_api_router)

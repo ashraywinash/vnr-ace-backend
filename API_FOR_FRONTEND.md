@@ -10,6 +10,42 @@
 - `username`: (string) Email address (e.g., `student@vnr.edu.in`)
 - `password`: (string) Password (e.g., `student123`)
 
+### 10. Multiple Offers Stats
+- **URL**: `/api/charts/multiple-offers`
+- **Method**: `GET`
+- **Description**: Returns the count of students holding more than one job offer.
+- **Response**:
+```json
+{
+  "students_with_multiple_offers": 45
+}
+```
+
+### 11. AI Dynamic Chart Routing
+- **URL**: `/api/charts/dynamic`
+- **Method**: `POST`
+- **Description**: Accepts a natural language query and uses an LLM to automatically run and return data for the correct chart endpoint.
+- **Request Body**:
+```json
+{
+  "query": "Can you show me the branch wise placement statistics?"
+}
+```
+- **Response**: (Varies based on identified chart)
+```json
+{
+  "chart": "branch-wise",
+  "data": [
+    {
+      "branch": "CSE",
+      "total": 240,
+      "placed": 200,
+      "percentage": 83.33
+    }
+  ]
+}
+```
+*Note: If the chart is unrecognized, it returns `{"error": "...", "chart": "unknown"}`.*
 **Response:**
 ```json
 {

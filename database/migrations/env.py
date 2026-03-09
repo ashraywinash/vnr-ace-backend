@@ -16,6 +16,11 @@ from core.config import settings
 from core.db import Base
 from models.user import User
 from models.role import Role
+from models.student import Student
+from models.company import Company
+from models.placement import Placement
+from models.offer import Offer
+from models.minor_degree import MinorDegree
 
 # Access Alembic Config
 config = context.config
@@ -45,19 +50,37 @@ def do_run_migrations(connection: Connection):
     with context.begin_transaction():
         context.run_migrations()
 
-async def run_migrations_online():
-    """Online mode with async engine."""
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section),
+def run_migrations_online():
+    """Online mode with sync engine."""
+    import os
+    from dotenv import load_dotenv
+    load_dotenv()
+    database_url = os.getenv("DATABASE_URL")
+    
+    if database_url and database_url.startswith("postgresql+asyncpg://"):
+        database_url = database_url.replace("postgresql+asyncpg://", "postgresql+psycopg2://")
+    
+    configuration = config.get_section(config.config_ini_section)
+    if database_url:
+        configuration["sqlalchemy.url"] = database_url
+        
+    from sqlalchemy import engine_from_config
+    
+    connectable = engine_from_config(
+        configuration,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
 
-    async with connectable.connect() as connection:
-        await connection.run_sync(do_run_migrations)
+    with connectable.connect() as connection:
+        context.configure(
+            connection=connection, target_metadata=target_metadata
+        )
+
+        with context.begin_transaction():
+            context.run_migrations()
 
 if context.is_offline_mode():
     run_migrations_offline()
 else:
-    import asyncio
-    asyncio.run(run_migrations_online())
+    run_migrations_online()

@@ -3,16 +3,24 @@ from dotenv import load_dotenv
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import declarative_base
+from sqlalchemy.pool import NullPool
 
 # Base class for all models
 
 load_dotenv()
 Base = declarative_base()
 DATABASE_URL = os.getenv("DATABASE_URL")
-# Async engine for PostgreSQL
+
+# Async engine for PostgreSQL using NullPool since Supabase has PgBouncer
 engine = create_async_engine(
     DATABASE_URL,  # Update with your database URL
     echo=True,  # shows SQL queries in terminal, helpful for debugging
+    poolclass=NullPool,
+    connect_args={
+        "ssl": "require",
+        "command_timeout": 60,
+        "statement_cache_size": 0,
+    }
 )
 
 # Async session factory
