@@ -126,8 +126,7 @@ If the query does not match any of these charts, reply with ONLY the word: unkno
 User Query: {query}
 """
 
-@router.post("/dynamic")
-async def generate_dynamic_chart(request: ChartQueryRequest, db: Session = Depends(get_db)):
+async def _process_dynamic_chart(query: str, db: Session):
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="LLM API Key missing")
@@ -137,7 +136,7 @@ async def generate_dynamic_chart(request: ChartQueryRequest, db: Session = Depen
     chain = prompt_template | llm
     
     try:
-        response = await chain.ainvoke({"query": request.query})
+        response = await chain.ainvoke({"query": query})
         identifier = response.content.strip().lower()
         
         if identifier == "placement-trend":
@@ -163,3 +162,17 @@ async def generate_dynamic_chart(request: ChartQueryRequest, db: Session = Depen
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/dynamic")
+async def get_dynamic_chart(query: str, db: Session = Depends(get_db)):
+    """
+    Identify and return chart data based on a natural language text query (GET).
+    """
+    return await _process_dynamic_chart(query, db)
+
+@router.post("/dynamic")
+async def generate_dynamic_chart(request: ChartQueryRequest, db: Session = Depends(get_db)):
+    """
+    Identify and return chart data based on a natural language text query (POST).
+    """
+    return await _process_dynamic_chart(request.query, db)

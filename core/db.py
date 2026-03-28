@@ -10,6 +10,8 @@ from sqlalchemy.pool import NullPool
 load_dotenv()
 Base = declarative_base()
 DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL and DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 # Async engine for PostgreSQL using NullPool since Supabase has PgBouncer
 engine = create_async_engine(
@@ -20,6 +22,7 @@ engine = create_async_engine(
         "ssl": "require",
         "command_timeout": 60,
         "statement_cache_size": 0,
+        "prepared_statement_cache_size": 0,
     }
 )
 

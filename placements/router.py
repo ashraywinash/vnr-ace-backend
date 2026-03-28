@@ -3,8 +3,10 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.db import get_db
 from core.deps import role_required
+from sqlalchemy import select
 from core.auth import get_current_user
 from core.guardrails import check_input_guardrail, check_output_guardrail
+from models.company_prep import CompanyPrepQuestion
 from ace_graphs import placements_graph
 # Import all graphs dynamically or by name
 from ace_graphs.placements_graph import (
@@ -12,6 +14,14 @@ from ace_graphs.placements_graph import (
     shortlisting_graph, tracking_graph, notification_graph
 )
 from ace_graphs.tp_admin_graph import tp_admin_agent
+
+# New Agents
+from agents.placements.graphs import (
+    chart_generator_graph,
+    live_dashboard_graph,
+    resume_feedback_graph,
+    shortlisting_graph
+)
 
 router = APIRouter(prefix="/placements", tags=["Placements"])
 
@@ -177,18 +187,30 @@ async def shortlist_students(
         
     return {"matches": filtered}
 
+@router.get("/prep/previous-questions")
+async def get_previous_questions(company_name: str, db: AsyncSession = Depends(get_db)):
+    """
+    Fetch previous year interview experiences and questions for a specific company.
+    """
+    stmt = select(CompanyPrepQuestion).where(
+        CompanyPrepQuestion.company_name.ilike(company_name)
+    )
+    result = await db.execute(stmt)
+    record = result.scalars().first()
+    
+    if not record:
+        raise HTTPException(status_code=404, detail="No previous questions found for this company")
+        
+    return {
+        "company": record.company_name,
+        "experiences": record.experiences or [],
+        "questions": record.questions or []
+    }
+
 @router.post("/prep/company-questions")
 async def get_company_questions(body: dict):
     """
     Generate top 20 company-specific interview questions.
-    
-    Request body:
-    {
-        "company_name": "Google",
-        "job_role": "Software Engineer"  # optional, defaults to "Software Engineer"
-    }
-    
-    Returns categorized interview questions with difficulty levels and relevance.
     """
     company_name = body.get("company_name")
     if not company_name:
@@ -205,7 +227,7 @@ async def get_company_questions(body: dict):
     initial_state = {
         "user_id": 999,
         "role": "student",
-        "message": f"{company_name} {job_role}",
+        "message": message,
         "intent": "prep",
         "authorized": False,
         "response": None,
@@ -217,7 +239,6 @@ async def get_company_questions(body: dict):
     try:
         # Run prep graph
         result = await prep_graph.ainvoke(initial_state)
-        
         reply = result.get("response")
         
         # Output Guardrail
@@ -236,5 +257,105 @@ async def get_company_questions(body: dict):
         print(f"Error generating company questions: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error generating questions: {str(e)}"
+            detail=f"Error processing questions: {str(e)}"
         )
+
+
+# ---------------------------
+#   NEW AGENT ENDPOINTS
+# ---------------------------
+
+@router.post("/chart-generator")
+async def chart_generator(body: dict, current_user=Depends(role_required("admin"))):
+    """
+    Agent for generating placement charts and visualizations.
+    """
+    query = body.get("message")
+    if not query:
+        raise HTTPException(status_code=400, detail="Message required")
+
+    initial_state = {
+        "user_query": query,
+        "user_role": "admin",
+        "user_id": current_user.id,
+        "memory": body.get("memory", []),
+        "audit_events": []
+    }
+    
+    result = await chart_generator_graph.ainvoke(initial_state)
+    return {
+        "reply": result.get("final_response"),
+        "chart_path": result.get("chart_path"),
+        "chart_type": result.get("chart_type"),
+        "memory": result.get("memory")
+    }
+
+@router.post("/live-dashboard")
+async def live_dashboard(body: dict, current_user=Depends(get_current_user)):
+    """
+    Agent for interacting with the live placement dashboard.
+    """
+    query = body.get("message", "load_dashboard")
+    initial_state = {
+        "user_query": query,
+        "user_role": current_user.role_id,
+        "user_id": current_user.id,
+        "memory": body.get("memory", []),
+        "audit_events": []
+    }
+    
+    result = await live_dashboard_graph.ainvoke(initial_state)
+    return {
+        "reply": result.get("final_response"),
+        "dashboard_data": result.get("dashboard_data"),
+        "memory": result.get("memory")
+    }
+
+@router.post("/resume-feedback")
+async def resume_feedback(body: dict, current_user=Depends(get_current_user)):
+    """
+    Agent for analyzing resumes and providing feedback.
+    """
+    query = body.get("message")
+    if not query:
+        raise HTTPException(status_code=400, detail="Message required")
+
+    initial_state = {
+        "user_query": query,
+        "user_role": current_user.role_id,
+        "user_id": current_user.id,
+        "resume_text": body.get("resume_text"),
+        "resume_id": body.get("resume_id"),
+        "memory": body.get("memory", []),
+        "audit_events": []
+    }
+    
+    result = await resume_feedback_graph.ainvoke(initial_state)
+    return {
+        "reply": result.get("final_response"),
+        "analysis": result.get("structured_analysis"),
+        "memory": result.get("memory")
+    }
+
+@router.post("/shortlisting-agent")
+async def shortlisting_agent_endpoint(body: dict, current_user=Depends(role_required("admin"))):
+    """
+    Agent for shortlisting students based on JD and criteria.
+    """
+    query = body.get("message")
+    if not query:
+        raise HTTPException(status_code=400, detail="Message required")
+
+    initial_state = {
+        "user_query": query,
+        "user_role": "admin",
+        "user_id": current_user.id,
+        "jd_text": body.get("jd_text"),
+        "audit_events": []
+    }
+    
+    result = await shortlisting_graph.ainvoke(initial_state)
+    return {
+        "reply": result.get("final_response"),
+        "shortlisted_students": result.get("shortlisted_students")
+    }

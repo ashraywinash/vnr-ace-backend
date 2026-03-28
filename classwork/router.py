@@ -5,6 +5,13 @@ from ace_graphs.classwork_graph import classwork_graph
 from ace_graphs.classwork_student_graph import classwork_student_graph
 from typing import Optional
 
+# New Agents
+from agents.classwork.graphs import (
+    email_automation_graph,
+    faculty_timetable_enquiry_graph,
+    report_generation_graph
+)
+
 router = APIRouter(prefix="/classwork", tags=["Classwork"])
 
 @router.get("/faculty")
@@ -131,4 +138,97 @@ async def student_chat(
             status_code=500, 
             detail=f"Error processing query: {str(e)}"
         )
+
+
+# ---------------------------
+#   NEW AGENT ENDPOINTS
+# ---------------------------
+
+@router.post("/email-automation")
+async def email_automation(body: dict, current_user=Depends(role_required("admin"))):
+    """
+    Agent for drafting and sending emails.
+    """
+    query = body.get("message")
+    if not query:
+        raise HTTPException(status_code=400, detail="Message required")
+
+    initial_state = {
+        "user_query": query,
+        "user_role": "admin",
+        "user_id": current_user.id,
+        "messages": [],
+        "audit_events": []
+    }
+    
+    # Check if this is an approval response
+    if body.get("approval"):
+        initial_state["human_approved"] = body.get("approval") == "approved"
+        # We need to resume the graph. For simplicity in this first version,
+        # we assume the state is reconstructed or passed back. 
+        # In LangGraph, we usually use a thread_id for this.
+        # For now, we'll just run it with the approval.
+
+    result = await email_automation_graph.ainvoke(initial_state)
+    return {
+        "reply": result.get("final_response"),
+        "state": {
+            "recipients": result.get("recipients"),
+            "subject": result.get("subject"),
+            "body": result.get("body"),
+            "approval_required": result.get("approval_required"),
+            "email_sent": result.get("email_sent")
+        }
+    }
+
+@router.post("/faculty-enquiry")
+async def faculty_enquiry(body: dict, current_user=Depends(get_current_user)):
+    """
+    Agent for faculty timetable and room inquiries.
+    """
+    query = body.get("message")
+    if not query:
+        raise HTTPException(status_code=400, detail="Message required")
+
+    initial_state = {
+        "user_query": query,
+        "user_role": current_user.role_id,
+        "user_id": current_user.id,
+        "messages": [],
+        "audit_events": []
+    }
+    
+    result = await faculty_timetable_enquiry_graph.ainvoke(initial_state)
+    return {
+        "reply": result.get("final_response"),
+        "metadata": {
+            "sql": result.get("sql_query"),
+            "clarification_needed": result.get("clarification_needed")
+        }
+    }
+
+@router.post("/report-generation")
+async def report_generation(body: dict, current_user=Depends(role_required("admin"))):
+    """
+    Agent for generating complex reports and analyzing data.
+    """
+    query = body.get("message")
+    if not query:
+        raise HTTPException(status_code=400, detail="Message required")
+
+    initial_state = {
+        "user_query": query,
+        "user_role": "admin",
+        "user_id": current_user.id,
+        "messages": [],
+        "audit_events": []
+    }
+    
+    result = await report_generation_graph.ainvoke(initial_state)
+    return {
+        "reply": result.get("final_response"),
+        "data": result.get("analysis_result"),
+        "artifact_path": result.get("downloadable_artifact_path"),
+        "waiting_for_human": result.get("waiting_for_human")
+    }
 

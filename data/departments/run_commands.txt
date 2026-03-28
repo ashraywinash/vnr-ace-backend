@@ -1,0 +1,2 @@
+poetry env activate
+poetry run uvicorn app:app --reload                                                     

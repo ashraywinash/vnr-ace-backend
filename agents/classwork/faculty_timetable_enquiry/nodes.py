@@ -1,0 +1,262 @@
+# agents/classwork/faculty_timetable_enquiry/nodes.py
+
+from __future__ import annotations
+
+from typing import Any, Dict
+
+from .constants import (
+    AGENT_NAME,
+    ALLOWED_INTENTS,
+    DB_SCHEMA_HINT,
+    SQL_FORBIDDEN_PATTERNS,
+    STANDARD_MESSAGES,
+)
+from .guardrails import check_access, check_language_and_exploit
+from .prompts import (
+    SCOPE_CLASSIFIER_PROMPT,
+    INTENT_CLASSIFIER_PROMPT,
+    SQL_GENERATOR_PROMPT,
+    ANSWER_FORMATTER_PROMPT,
+)
+from .schemas import ScopeClassifierOutput, IntentClassifierOutput, SQLGeneratorOutput
+from .utils import make_audit_event, compact_rows, trim_memory
+
+
+def access_control_node(state: Dict[str, Any]) -> Dict[str, Any]:
+    allowed, reason = check_access(state.get("user_role", ""))
+    state["access_granted"] = allowed
+
+    if not allowed:
+        state["rejection_reason"] = reason
+        state["final_response"] = STANDARD_MESSAGES["access_denied"]
+        state.setdefault("audit_events", []).append(
+            make_audit_event(
+                "access_denied",
+                state["user_id"],
+                AGENT_NAME,
+                {"role": state.get("user_role"), "query": state.get("user_query")},
+            )
+        )
+    return state
+
+
+def language_guardrail_node(state: Dict[str, Any]) -> Dict[str, Any]:
+    safe, exploit, reason = check_language_and_exploit(state.get("user_query", ""))
+    state["safe_language"] = safe
+    state["exploit_detected"] = exploit
+
+    if not safe:
+        state["rejection_reason"] = reason
+        state["final_response"] = STANDARD_MESSAGES["unsafe_language"]
+        state.setdefault("audit_events", []).append(
+            make_audit_event(
+                "unsafe_or_exploit_query",
+                state["user_id"],
+                AGENT_NAME,
+                {"query": state.get("user_query"), "reason": reason},
+            )
+        )
+    return state
+
+
+def scope_classifier_node(state: Dict[str, Any], llm_service: Any = None) -> Dict[str, Any]:
+    query = state.get("user_query", "")
+    if llm_service is None:
+        q = query.lower()
+        kws = ["faculty", "timetable", "schedule", "room", "venue", "section", "period"]
+        label = "in_scope" if any(k in q for k in kws) else "out_of_scope"
+        result = ScopeClassifierOutput(label=label, confidence=0.75, reason="Heuristic fallback")
+    else:
+        result = llm_service.invoke_structured(
+            system_prompt=SCOPE_CLASSIFIER_PROMPT,
+            user_prompt=query,
+            schema=ScopeClassifierOutput,
+        )
+
+    state["in_scope"] = result.label == "in_scope"
+
+    if not state["in_scope"]:
+        state["rejection_reason"] = "out_of_scope"
+        state["final_response"] = STANDARD_MESSAGES["out_of_scope"]
+        state.setdefault("audit_events", []).append(
+            make_audit_event(
+                "out_of_scope_query",
+                state["user_id"],
+                AGENT_NAME,
+                {"query": query, "reason": result.reason, "confidence": result.confidence},
+            )
+        )
+    return state
+
+
+def intent_classifier_node(state: Dict[str, Any], llm_service: Any = None) -> Dict[str, Any]:
+    if llm_service is None:
+        raise ValueError("intent_classifier_node requires llm_service for production use.")
+
+    memory = trim_memory(state.get("memory", []), 10)
+    user_prompt = (
+        f"Conversation memory: {memory}\n"
+        f"Current user query: {state.get('user_query', '')}\n"
+        f"Allowed intents: {sorted(ALLOWED_INTENTS)}"
+    )
+
+    result: IntentClassifierOutput = llm_service.invoke_structured(
+        system_prompt=INTENT_CLASSIFIER_PROMPT,
+        user_prompt=user_prompt,
+        schema=IntentClassifierOutput,
+    )
+
+    state["intent"] = result.intent
+    state["intent_confidence"] = result.confidence
+    state["interpreted_entities"] = result.interpreted_entities
+    state["clarification_needed"] = result.clarification_needed
+    state["clarification_question"] = result.clarification_question
+
+    state.setdefault("audit_events", []).append(
+        make_audit_event(
+            "intent_classified",
+            state["user_id"],
+            AGENT_NAME,
+            {
+                "intent": result.intent,
+                "confidence": result.confidence,
+                "entities": result.interpreted_entities,
+                "clarification_needed": result.clarification_needed,
+            },
+        )
+    )
+    return state
+
+
+def clarification_node(state: Dict[str, Any]) -> Dict[str, Any]:
+    state["final_response"] = (
+        f"{STANDARD_MESSAGES['clarification_prefix']}\n"
+        f"{state.get('clarification_question')}"
+    )
+    return state
+
+
+def sql_generation_node(state: Dict[str, Any], llm_service: Any = None) -> Dict[str, Any]:
+    if llm_service is None:
+        raise ValueError("sql_generation_node requires llm_service for production use.")
+
+    user_prompt = (
+        f"Intent: {state.get('intent')}\n"
+        f"Entities: {state.get('interpreted_entities', {})}\n"
+        f"Schema: {DB_SCHEMA_HINT}\n"
+        f"Current query: {state.get('user_query', '')}\n"
+        f"Conversation memory: {trim_memory(state.get('memory', []), 10)}"
+    )
+
+    result: SQLGeneratorOutput = llm_service.invoke_structured(
+        system_prompt=SQL_GENERATOR_PROMPT,
+        user_prompt=user_prompt,
+        schema=SQLGeneratorOutput,
+    )
+
+    state["sql_query"] = result.sql_query.strip()
+    state["sql_params"] = result.sql_params or {}
+
+    state.setdefault("audit_events", []).append(
+        make_audit_event(
+            "sql_generated",
+            state["user_id"],
+            AGENT_NAME,
+            {"intent": state.get("intent"), "sql": state["sql_query"]},
+        )
+    )
+    return state
+
+
+def sql_safety_validation_node(state: Dict[str, Any]) -> Dict[str, Any]:
+    sql = (state.get("sql_query") or "").strip().lower()
+    issues = []
+
+    if not sql.startswith("select"):
+        issues.append("Only SELECT queries are allowed.")
+
+    for pattern in SQL_FORBIDDEN_PATTERNS:
+        if pattern in sql:
+            issues.append(f"Forbidden SQL pattern detected: {pattern}")
+
+    state["sql_validation_issues"] = issues
+    state["sql_safe"] = len(issues) == 0
+
+    if not state["sql_safe"]:
+        state["final_response"] = STANDARD_MESSAGES["sql_blocked"]
+        state.setdefault("audit_events", []).append(
+            make_audit_event(
+                "sql_blocked",
+                state["user_id"],
+                AGENT_NAME,
+                {"issues": issues, "sql": state.get("sql_query")},
+            )
+        )
+    return state
+
+
+def sql_execution_node(state: Dict[str, Any], sql_repo: Any = None) -> Dict[str, Any]:
+    if sql_repo is None:
+        raise ValueError("sql_execution_node requires sql_repo for production use.")
+
+    rows = sql_repo.execute_read_only(
+        sql_query=state.get("sql_query", ""),
+        sql_params=state.get("sql_params", {}),
+    )
+
+    state["query_result_rows"] = rows
+    state["result_count"] = len(rows)
+
+    state.setdefault("audit_events", []).append(
+        make_audit_event(
+            "sql_executed",
+            state["user_id"],
+            AGENT_NAME,
+            {"result_count": len(rows)},
+        )
+    )
+    return state
+
+
+def answer_formatter_node(state: Dict[str, Any], llm_service: Any = None) -> Dict[str, Any]:
+    rows = state.get("query_result_rows", [])
+
+    if not rows:
+        state["final_response"] = STANDARD_MESSAGES["no_results"]
+        return state
+
+    if llm_service is None:
+        state["final_response"] = f"Found {len(rows)} matching rows: {compact_rows(rows, 5)}"
+        return state
+
+    user_prompt = (
+        f"Intent: {state.get('intent')}\n"
+        f"User query: {state.get('user_query')}\n"
+        f"Entities: {state.get('interpreted_entities', {})}\n"
+        f"Rows: {compact_rows(rows, 10)}"
+    )
+    answer = llm_service.invoke_text(
+        system_prompt=ANSWER_FORMATTER_PROMPT,
+        user_prompt=user_prompt,
+    )
+    state["final_response"] = answer
+    return state
+
+
+def memory_update_node(state: Dict[str, Any]) -> Dict[str, Any]:
+    memory = state.get("memory", [])
+    memory.append({
+        "user_query": state.get("user_query"),
+        "intent": state.get("intent"),
+        "entities": state.get("interpreted_entities", {}),
+        "sql_query": state.get("sql_query"),
+        "result_count": state.get("result_count", 0),
+    })
+    state["memory"] = trim_memory(memory, 20)
+    return state
+
+
+def persist_audit_logs_node(state: Dict[str, Any], audit_repo: Any = None) -> Dict[str, Any]:
+    if audit_repo is not None:
+        audit_repo.persist_events(state.get("audit_events", []))
+    return state

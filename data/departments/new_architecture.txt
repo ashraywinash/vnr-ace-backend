@@ -1,0 +1,43 @@
+students
+faculty
+admin
+students_info
+role_permissions
+departemnts
+companies
+company_contacts
+placement_drives
+placement_eligibility_rules
+placement_applications
+interview_rounds
+interview_results
+placement_offers
+resumes
+resume_embeddings
+
+
+
+
+
+
+
+admission graph:
+
+classwork:
+lets split our classwork module main graph and create three graphs and make them available as three separate features:
+1. Report generation agent -- only access to specific faculty and HOD (to generate the reports and students list based on the query in simple language. choose handling excel data or sql filtering which will be best and optimal, local csv data operation might be best bcs the number of db operations will reduce)
+it should have planning, analysis,validation, human approval and follow up until the user says stop.it can ask follow up questions  at any node if any additional inpits needed from human to confirmation to avoid hallucination
+2. faculty/time table enquiry -- this is accessible by all students and faculty, just a normal agent qnswering queries related to faculty ,their venues,availabitly and all, and timetables of sections, we can handle this by generating dynamic sql queries based on the user query .so a intent classifier ,which understands the request in detail and also can ask follow up questions to confirmation to avoid hallucination and then a sql node, generating the dynamic sql(read only) and getting results and display node, and then this flow must be continuous conversation, so a chatbot with memory kind nut with the mentioned nodes.
+3. mail automation node - only accessible to faculty -- take input query, generate mail, human approval , send automatically.
+
+
+placements:
+
+same in placements module, lets create the following agents
+1. resume feedback agent, initially rag is performed and analysis is generated and then the user can ask follow up questions about their resume, once used analysis for an agent, lets store it to avoid the multiple analysis again for the next time.
+2. shortlisting agent,. this also take job description, and performs rag over the resumes and find the best students accordingly and further follow up
+3. chart generator graph, where generating charts based on user prompt and handle follow up questions related to the generated graph.
+4. live dashboard, (similar to chart generation, but a ste of charts are pre decided and updated every day or weely, or after placement drives to dislay the live status of place0mnents) and also answer to questions answering to user natural language queries. 
+
+each agent must be enabled with guardrails to only answer related to their scope and functionality, other queries ,ust be discarded to usre saying i cant answer , this is out of scope and all, and also language guardrails, and record the exploiting events in our logs 
+  

@@ -10,7 +10,6 @@ from routes.test_rbac import router as test_rbac_router
 from routes.api_router import router as build_api_router
 
 from core.deps import role_required
-from fastapi import FastAPI
 from core.db import engine, Base
 
 # IMPORTANT: import models so metadata registers
@@ -22,18 +21,7 @@ from models.placement import Placement
 from models.offer import Offer
 from models.minor_degree import MinorDegree
 from models.job_notification import JobNotification
-
-app = FastAPI(title="VNR-ACE Backend")
-
-# ---------------------------
-# 🚀 CORS
-# ---------------------------
-origins = [
-    "http://localhost:3000",
-    "https://vnr-ace-frontend-gx34.vercel.app",
-    "http://127.0.0.1:3000",
-]
-
+from models.company_prep import CompanyPrepQuestion
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup logic
@@ -47,16 +35,25 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    # Shutdown logic (optional)
-    # await engine.dispose()
+app = FastAPI(
+    title="VNR-ACE Backend",
+    lifespan=lifespan
+)
 
-
-app = FastAPI(lifespan=lifespan)
-
+# ---------------------------
+# 🚀 CORS
+# ---------------------------
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://vnr-ace-frontend-gx34.vercel.app",
+    "https://vnr-ace-frontend.vercel.app", # Added common variant
+]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex="http://localhost:.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
